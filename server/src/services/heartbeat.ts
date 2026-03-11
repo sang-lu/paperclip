@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, not, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import {
   agents,
@@ -881,6 +881,7 @@ export function heartbeatService(db: Db) {
       intervalSec: Math.max(0, asNumber(heartbeat.intervalSec, 0)),
       wakeOnDemand: asBoolean(heartbeat.wakeOnDemand ?? heartbeat.wakeOnAssignment ?? heartbeat.wakeOnOnDemand ?? heartbeat.wakeOnAutomation, true),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(heartbeat.maxConcurrentRuns),
+      requireIssueAssigned: asBoolean(heartbeat.requireIssueAssigned, false),
     };
   }
 
@@ -1923,6 +1924,22 @@ export function heartbeatService(db: Db) {
       return null;
     }
 
+    if (policy.requireIssueAssigned) {
+      const hasAssignedIssue = await db
+        .select({ id: issues.id })
+        .from(issues)
+        .where(and(
+          eq(issues.assigneeAgentId, agent.id),
+          not(inArray(issues.status, ["done", "cancelled"])),
+        ))
+        .limit(1)
+        .then((rows) => rows.length > 0);
+      if (!hasAssignedIssue) {
+        await writeSkippedRequest("agent.requireIssueAssigned.no_issue");
+        return null;
+      }
+    }
+
     const bypassIssueExecutionLock =
       reason === "issue_comment_mentioned" ||
       readNonEmptyString(enrichedContextSnapshot.wakeReason) === "issue_comment_mentioned";
@@ -2465,6 +2482,19 @@ export function heartbeatService(db: Db) {
         if (agent.status === "paused" || agent.status === "terminated" || agent.status === "pending_approval") continue;
         const policy = parseHeartbeatPolicy(agent);
         if (!policy.enabled || policy.intervalSec <= 0) continue;
+
+        if (policy.requireIssueAssigned) {
+          const hasAssignedIssue = await db
+            .select({ id: issues.id })
+            .from(issues)
+            .where(and(
+              eq(issues.assigneeAgentId, agent.id),
+              not(inArray(issues.status, ["done", "cancelled"])),
+            ))
+            .limit(1)
+            .then((rows) => rows.length > 0);
+          if (!hasAssignedIssue) { skipped += 1; continue; }
+        }
 
         checked += 1;
         const baseline = new Date(agent.lastHeartbeatAt ?? agent.createdAt).getTime();

@@ -797,6 +797,12 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
           }
           <div className={cn(cards ? "border border-border rounded-lg overflow-hidden" : "")}>
             <div className={cn(cards ? "p-4 space-y-3" : "px-4 pb-3 space-y-3")}>
+              <ToggleField
+                label="Only run when issue assigned"
+                hint={help.requireIssueAssigned}
+                checked={eff("heartbeat", "requireIssueAssigned", heartbeat.requireIssueAssigned === true)}
+                onChange={(v) => mark("heartbeat", "requireIssueAssigned", v || undefined)}
+              />
               <ToggleWithNumber
                 label="Heartbeat on interval"
                 hint={help.heartbeatInterval}

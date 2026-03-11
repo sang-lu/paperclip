@@ -54,6 +54,7 @@ export const help: Record<string, string> = {
   wakeOnDemand: "Allow this agent to be woken by assignments, API calls, UI actions, or automated systems.",
   cooldownSec: "Minimum seconds between consecutive heartbeat runs.",
   maxConcurrentRuns: "Maximum number of heartbeat runs that can execute simultaneously for this agent.",
+  requireIssueAssigned: "Only wake this agent when at least one issue is currently assigned to it. Blocks all invocations — timer, on-demand, and automated — when no issue is assigned.",
   budgetMonthlyCents: "Monthly spending limit in cents. 0 means no limit.",
 };
 
