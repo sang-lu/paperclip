@@ -225,6 +225,7 @@ export function issueRoutes(db: Db, storage: StorageService) {
       parentId: req.query.parentId as string | undefined,
       labelId: req.query.labelId as string | undefined,
       q: req.query.q as string | undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string, 10) : undefined,
     });
     res.json(result);
   });
