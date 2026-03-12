@@ -852,6 +852,7 @@ export function heartbeatService(db: Db) {
       wakeOnAssignment: asBoolean(heartbeat.wakeOnAssignment, true),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(heartbeat.maxConcurrentRuns),
       requireIssueAssigned: asBoolean(heartbeat.requireIssueAssigned, false),
+      skipIfRunning: asBoolean(heartbeat.skipIfRunning, true),
     };
   }
 
@@ -1881,6 +1882,13 @@ export function heartbeatService(db: Db) {
       await writeSkippedRequest("heartbeat.disabled");
       return null;
     }
+    if (source === "timer" && policy.skipIfRunning) {
+      const runningCount = await countRunningRunsForAgent(agentId);
+      if (runningCount > 0) {
+        await writeSkippedRequest("heartbeat.skipIfRunning.busy");
+        return null;
+      }
+    }
     if (source === "assignment" && !policy.wakeOnAssignment) {
       await writeSkippedRequest("heartbeat.wakeOnAssignment.disabled");
       return null;
@@ -2461,6 +2469,11 @@ export function heartbeatService(db: Db) {
             .limit(1)
             .then((rows) => rows.length > 0);
           if (!hasAssignedIssue) { skipped += 1; continue; }
+        }
+
+        if (policy.skipIfRunning) {
+          const runningCount = await countRunningRunsForAgent(agent.id);
+          if (runningCount > 0) { skipped += 1; continue; }
         }
 
         checked += 1;

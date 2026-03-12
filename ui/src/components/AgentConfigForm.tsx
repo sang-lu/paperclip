@@ -820,7 +820,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 label="Wake on new assignment"
                 hint={help.wakeOnAssignment}
                 checked={eff("heartbeat", "wakeOnAssignment", heartbeat.wakeOnAssignment !== false)}
-                onChange={(v) => mark("heartbeat", "wakeOnAssignment", v === false ? false : undefined)}
+                onChange={(v) => mark("heartbeat", "wakeOnAssignment", v)}
               />
               <ToggleWithNumber
                 label="Heartbeat on interval"
@@ -834,6 +834,14 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 numberHint={help.intervalSec}
                 showNumber={eff("heartbeat", "enabled", heartbeat.enabled !== false)}
               />
+              {eff("heartbeat", "enabled", heartbeat.enabled !== false) && (
+                <ToggleField
+                  label="Skip if already running"
+                  hint={help.skipIfRunning}
+                  checked={eff("heartbeat", "skipIfRunning", heartbeat.skipIfRunning !== false)}
+                  onChange={(v) => mark("heartbeat", "skipIfRunning", v)}
+                />
+              )}
             </div>
             <CollapsibleSection
               title="Advanced Run Policy"
