@@ -816,6 +816,12 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 checked={eff("heartbeat", "requireIssueAssigned", heartbeat.requireIssueAssigned === true)}
                 onChange={(v) => mark("heartbeat", "requireIssueAssigned", v || undefined)}
               />
+              <ToggleField
+                label="Wake on new assignment"
+                hint={help.wakeOnAssignment}
+                checked={eff("heartbeat", "wakeOnAssignment", heartbeat.wakeOnAssignment !== false)}
+                onChange={(v) => mark("heartbeat", "wakeOnAssignment", v === false ? false : undefined)}
+              />
               <ToggleWithNumber
                 label="Heartbeat on interval"
                 hint={help.heartbeatInterval}

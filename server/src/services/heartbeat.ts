@@ -848,7 +848,8 @@ export function heartbeatService(db: Db) {
     return {
       enabled: asBoolean(heartbeat.enabled, true),
       intervalSec: Math.max(0, asNumber(heartbeat.intervalSec, 0)),
-      wakeOnDemand: asBoolean(heartbeat.wakeOnDemand ?? heartbeat.wakeOnAssignment ?? heartbeat.wakeOnOnDemand ?? heartbeat.wakeOnAutomation, true),
+      wakeOnDemand: asBoolean(heartbeat.wakeOnDemand ?? heartbeat.wakeOnOnDemand ?? heartbeat.wakeOnAutomation, true),
+      wakeOnAssignment: asBoolean(heartbeat.wakeOnAssignment, true),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(heartbeat.maxConcurrentRuns),
       requireIssueAssigned: asBoolean(heartbeat.requireIssueAssigned, false),
     };
@@ -1880,7 +1881,11 @@ export function heartbeatService(db: Db) {
       await writeSkippedRequest("heartbeat.disabled");
       return null;
     }
-    if (source !== "timer" && !policy.wakeOnDemand) {
+    if (source === "assignment" && !policy.wakeOnAssignment) {
+      await writeSkippedRequest("heartbeat.wakeOnAssignment.disabled");
+      return null;
+    }
+    if (source !== "timer" && source !== "assignment" && !policy.wakeOnDemand) {
       await writeSkippedRequest("heartbeat.wakeOnDemand.disabled");
       return null;
     }
